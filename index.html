@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DLS Polls</title>
+</head>
+<body>
+  <h1>Do you like the house system?</h1>
+  
+  <!-- Vote buttons -->
+  <button onclick="vote('yes')">Yes</button>
+  <button onclick="vote('no')">No</button>
+
+  <!-- Results display -->
+  <div class="results">
+    <p id="resultsText">Loading results...</p>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js"></script>
+
+  <script>
+    // Firebase config (your project)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDBzfWtMdmLomiV_jgEqRGzKDikdFJ0fXM",
+      authDomain: "dls-polls.firebaseapp.com",
+      databaseURL: "https://dls-polls-default-rtdb.firebaseio.com",
+      projectId: "dls-polls",
+      storageBucket: "dls-polls.firebasestorage.app",
+      messagingSenderId: "342737845957",
+      appId: "1:342737845957:web:f94da462a8b6cacc5b3aac",
+      measurementId: "G-T4LCC34HLP"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Local votes copy (to update UI immediately)
+    let localVotes = { yes: 0, no: 0 };
+
+    // Vote function
+    function vote(choice) {
+      // Update UI immediately
+      localVotes[choice] = (localVotes[choice] || 0) + 1;
+      showResults(localVotes);
+
+      // Update Firebase
+      const ref = db.ref("polls/houseSystem/" + choice);
+      ref.transaction(current => (current || 0) + 1);
+    }
+
+    // Function to display percentages
+    function showResults(votes) {
+      const total = votes.yes + votes.no;
+      const yesPercent = total ? ((votes.yes / total) * 100).toFixed(1) : 0;
+      const noPercent = total ? ((votes.no / total) * 100).toFixed(1) : 0;
+      document.getElementById("resultsText").innerText =
+        `Yes: ${yesPercent}% | No: ${noPercent}% (Total votes: ${total})`;
+    }
+
+    // Real-time listener
+    db.ref("polls/houseSystem").on("value", snapshot => {
+      localVotes = snapshot.val() || { yes: 0, no: 0 };
+      showResults(localVotes);
+    });
+
+  </script>
+</body>
+</html>
